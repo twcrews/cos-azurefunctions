@@ -1,36 +1,48 @@
 ﻿using System;
-using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+using System.Net.Http;
+using System.Collections;
+using System.Text;
 
 namespace COS.Internal.Dashboard.AzureFunctions
 {
-    public static class CosDashboard
-    {
-        [FunctionName("CosDashboard")]
-        public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
-            ILogger log)
-        {
-            log.LogInformation("C# HTTP trigger function processed a request.");
+	public class CosDashboard
+	{
+		private static readonly HttpClient _client = new();
+		private const string FunctionName = "CosDashboard";
 
-            string name = req.Query["name"];
+		public CosDashboard()
+		{
+			IDictionary variables = Environment.GetEnvironmentVariables();
 
-            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            dynamic data = JsonConvert.DeserializeObject(requestBody);
-            name = name ?? data?.name;
+			string appID = variables["PLANNING_CENTER_APP_ID"] as string;
+			string secret = variables["PLANNING_CENTER_SECRET"] as string;
 
-            string responseMessage = string.IsNullOrEmpty(name)
-                ? "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response."
-                : $"Hello, {name}. This HTTP triggered function executed successfully.";
+			string encodedCredentials = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{appID}:{secret}"));
+			_client.DefaultRequestHeaders.Authorization = new("Basic", encodedCredentials);
 
-            return new OkObjectResult(responseMessage);
-        }
-    }
+			_client.BaseAddress = new(variables["PLANNING_CENTER_API_URL"] as string);
+		}
+
+		[FunctionName(FunctionName)]
+		public async Task<IActionResult> Run(
+			[HttpTrigger(AuthorizationLevel.Function, "get", Route = $"{FunctionName}/{{*remainder}}")] HttpRequest request,
+			ILogger log)
+		{
+			string path = request.Path.Value
+				.Replace($"/api/{FunctionName}/", "", StringComparison.InvariantCultureIgnoreCase);
+			log.LogInformation($"Processed a request to the following path: {path}");
+
+			HttpResponseMessage response = await _client.GetAsync(path);
+			string body = await response.Content.ReadAsStringAsync();
+
+			return new OkObjectResult(body);
+		}
+	}
 }
 
