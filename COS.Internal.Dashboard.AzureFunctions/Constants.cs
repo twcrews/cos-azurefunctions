@@ -10,4 +10,6 @@ public static class Constants
 
 	public const string DashboardFunctionName = "CosDashboard";
 	public const string DashboardFunctionRoute = $"{DashboardFunctionName}/{{*remainder}}";
+
+	public const string AuthenticationFunctionName = "Authenticate";
 }
