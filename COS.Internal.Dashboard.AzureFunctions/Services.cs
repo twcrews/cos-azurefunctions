@@ -7,7 +7,7 @@ namespace COS.Internal.Dashboard.AzureFunctions;
 
 public static class Services
 {
-	[FunctionName(Constants.AuthenticationFunctionName)]
+	[FunctionName(AzureFunctions.Authentication.Name)]
 	public static IActionResult Run(
 		[HttpTrigger(AuthorizationLevel.Function, "get", Route = null)] HttpRequest request)
 	{

@@ -11,16 +11,18 @@ public class Startup : FunctionsStartup
 {
 	public override void Configure(IFunctionsHostBuilder builder)
 	{
-		builder.Services.AddHttpClient(Constants.HttpClientName, client =>
-		{
-			IDictionary variables = Environment.GetEnvironmentVariables();
+		IDictionary variables = Environment.GetEnvironmentVariables();
 
-			string appID = variables[Constants.PlanningCenterAppID] as string;
-			string secret = variables[Constants.PlanningCenterSecret] as string;
+		builder.Services.AddHttpClient(HttpClientNames.Api, client =>
+		{
+			string appID = variables[EnvironmentVariables.PlanningCenter.Credentials.AppID] as string;
+			string secret = variables[EnvironmentVariables.PlanningCenter.Credentials.Secret] as string;
 			string encodedCredentials = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{appID}:{secret}"));
 
-			client.BaseAddress = new(variables[Constants.PlanningCenterApiUrl] as string);
+			client.BaseAddress = new(variables[EnvironmentVariables.PlanningCenter.BaseUrls.Api] as string);
 			client.DefaultRequestHeaders.Authorization = new("Basic", encodedCredentials);
 		});
+		builder.Services.AddHttpClient(HttpClientNames.Avatars, client =>
+			client.BaseAddress = new(variables[EnvironmentVariables.PlanningCenter.BaseUrls.Avatars] as string));
 	}
 }

@@ -13,41 +13,74 @@ namespace COS.Internal.Dashboard.AzureFunctions;
 
 public class CosDashboard
 {
-	private readonly HttpClient _client;
-	public CosDashboard(IHttpClientFactory factory) => _client = factory.CreateClient(Constants.HttpClientName);
+	private readonly HttpClient _apiClient;
+	private readonly HttpClient _avatarsClient;
 
-	[FunctionName(Constants.DashboardFunctionName)]
-	public async Task<IActionResult> Run(
-		[HttpTrigger(AuthorizationLevel.Function, "get", Route = Constants.DashboardFunctionRoute)] HttpRequest request,
+	public CosDashboard(IHttpClientFactory factory)
+	{
+		_apiClient = factory.CreateClient(HttpClientNames.Api) ;
+		_avatarsClient = factory.CreateClient(HttpClientNames.Avatars);
+	}
+
+	[FunctionName(AzureFunctions.Dashboard.Name)]
+	public async Task<IActionResult> DashboardProxy(
+		[HttpTrigger(AuthorizationLevel.Function, "get", Route = AzureFunctions.Dashboard.Route)] HttpRequest request,
 		ILogger log)
 	{
 		try
 		{
-			string path = $"{request.Path.Value}{request.QueryString}"
-				.Replace($"/api/{Constants.DashboardFunctionName}/", "", StringComparison.InvariantCultureIgnoreCase);
+			string path = GetRequestPathAndQuery(request, AzureFunctions.Dashboard.Name);
 			log.LogInformation($"Processed a request to the following path: {path}");
 
-			HttpResponseMessage response = await _client.GetAsync(path);
+			HttpResponseMessage response = await _apiClient.GetAsync(path);
 			string body = await response.Content.ReadAsStringAsync();
 
 			return new OkObjectResult(body);
 		} 
 		catch (Exception exception)
 		{
-			IDictionary variables = Environment.GetEnvironmentVariables();
-			string appID = variables[Constants.PlanningCenterAppID] as string;
-			string secret = variables[Constants.PlanningCenterSecret] as string;
-
-			string message = exception.Message
-				.Replace(appID, "*****", true, CultureInfo.InvariantCulture)
-				.Replace(secret, "*****", true, CultureInfo.InvariantCulture);
-
-			ObjectResult response = new(message)
-			{
-				StatusCode = StatusCodes.Status500InternalServerError
-			};
-			return response;
+			return SecureExceptionResult(exception);
 		}
+	}
+
+	[FunctionName(AzureFunctions.Avatars.Name)]
+	public async Task<IActionResult> AvatarProxy(
+		[HttpTrigger(AuthorizationLevel.Function, "get", Route = AzureFunctions.Avatars.Route)] HttpRequest request,
+		ILogger log)
+	{
+		try
+		{
+			string path = GetRequestPathAndQuery(request, AzureFunctions.Avatars.Name);
+			log.LogInformation($"Processed an Avatar request to the following path: {path}");
+
+			HttpResponseMessage response = await _avatarsClient.GetAsync(path);
+			return new FileStreamResult(await response.Content.ReadAsStreamAsync(), $"image/{path[^3..]}");
+		}
+		catch (Exception exception)
+		{
+			return SecureExceptionResult(exception);
+		}
+	}
+
+	private static string GetRequestPathAndQuery(HttpRequest request, string functionName)
+		=> $"{request.Path.Value}{request.QueryString}"
+				.Replace($"/api/{functionName}/", "", StringComparison.InvariantCultureIgnoreCase);
+
+	private static ObjectResult SecureExceptionResult(Exception exception)
+	{
+		IDictionary variables = Environment.GetEnvironmentVariables();
+		string appID = variables[EnvironmentVariables.PlanningCenter.Credentials.AppID] as string;
+		string secret = variables[EnvironmentVariables.PlanningCenter.Credentials.Secret] as string;
+
+		string message = exception.Message
+			.Replace(appID, "*****", true, CultureInfo.InvariantCulture)
+			.Replace(secret, "*****", true, CultureInfo.InvariantCulture);
+
+		ObjectResult response = new(message)
+		{
+			StatusCode = StatusCodes.Status500InternalServerError
+		};
+		return response;
 	}
 }
 
