@@ -23,7 +23,7 @@ public class CosDashboard
 	{
 		try
 		{
-			string path = request.Path.Value
+			string path = $"{request.Path.Value}{request.QueryString}"
 				.Replace($"/api/{Constants.DashboardFunctionName}/", "", StringComparison.InvariantCultureIgnoreCase);
 			log.LogInformation($"Processed a request to the following path: {path}");
 
