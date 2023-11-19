@@ -24,15 +24,23 @@ public class CosDashboard
 
 	[FunctionName(AzureFunctions.Dashboard.Name)]
 	public async Task<IActionResult> DashboardProxy(
-		[HttpTrigger(AuthorizationLevel.Function, "get", Route = AzureFunctions.Dashboard.Route)] HttpRequest request,
+		[HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = AzureFunctions.Dashboard.Route)] HttpRequest request,
 		ILogger log)
 	{
 		try
 		{
 			string path = GetRequestPathAndQuery(request, AzureFunctions.Dashboard.Name);
-			log.LogInformation($"Processed a request to the following path: {path}");
+			log.LogInformation($"Processed request to path: {path}");
 
-			HttpResponseMessage response = await _apiClient.GetAsync(path);
+			HttpResponseMessage response;
+			if (request.Protocol == "get") 
+			{
+				response = await _apiClient.GetAsync(path);
+			}
+			else
+			{
+				response = await _apiClient.PostAsync(path, new StreamContent(request.Body));
+			}
 			string body = await response.Content.ReadAsStringAsync();
 
 			return new OkObjectResult(body);
