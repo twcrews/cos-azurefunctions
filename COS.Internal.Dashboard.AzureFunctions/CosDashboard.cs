@@ -33,7 +33,7 @@ public class CosDashboard
 			log.LogInformation($"Processed request to path: {path}");
 
 			HttpResponseMessage response;
-			if (request.Protocol == "get") 
+			if (request.Method.ToLowerInvariant() == "get") 
 			{
 				response = await _apiClient.GetAsync(path);
 			}
