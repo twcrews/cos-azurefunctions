@@ -10,6 +10,7 @@ using System.Globalization;
 using System.Collections;
 using System.IO;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace COS.Internal.Dashboard.AzureFunctions;
 
@@ -26,7 +27,11 @@ public class CosDashboard
 
 	[FunctionName(AzureFunctions.Dashboard.Name)]
 	public async Task<IActionResult> DashboardProxy(
-		[HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = AzureFunctions.Dashboard.Route)] HttpRequest request,
+		[HttpTrigger(
+			AuthorizationLevel.Function,
+			"get",
+			"post",
+			Route = AzureFunctions.Dashboard.Route)] HttpRequest request,
 		ILogger log)
 	{
 		try
@@ -55,7 +60,10 @@ public class CosDashboard
 
 	[FunctionName(AzureFunctions.Avatars.Name)]
 	public async Task<IActionResult> AvatarProxy(
-		[HttpTrigger(AuthorizationLevel.Function, "get", Route = AzureFunctions.Avatars.Route)] HttpRequest request,
+		[HttpTrigger(
+			AuthorizationLevel.Function,
+			"get",
+			Route = AzureFunctions.Avatars.Route)] HttpRequest request,
 		ILogger log)
 	{
 		try
@@ -72,9 +80,42 @@ public class CosDashboard
 		}
 	}
 
+	[FunctionName(AzureFunctions.Calendar.Name)]
+	public static IActionResult Calendar(
+		[HttpTrigger(
+			AuthorizationLevel.Function,
+			"get",
+			Route = AzureFunctions.Calendar.Route)] HttpRequest request,
+			string calendarName,
+		ILogger log)
+	{
+		try
+		{
+			if (string.IsNullOrWhiteSpace(calendarName))
+			{
+				log.LogInformation("Processed request for list of calendars.");
+				return new OkObjectResult(Directory.GetFiles(Paths.Calendar)
+					.Select(f => Path.GetFileNameWithoutExtension(f)));
+			}
+			log.LogInformation($"Processed request for calendar \"{calendarName}\".");
+			return new OkObjectResult(File.ReadAllText($"{Paths.Calendar}/{calendarName}.ics"));
+		}
+		catch (FileNotFoundException)
+		{
+			return new BadRequestObjectResult("No such calendar.");
+		}
+		catch (Exception exception)
+		{
+			return SecureExceptionResult(exception);
+		}
+	}
+
 	[FunctionName(AzureFunctions.Diagnostic.FileShare.Name)]
 	public static IActionResult FileShare(
-		[HttpTrigger(AuthorizationLevel.Function, "get", Route = AzureFunctions.Diagnostic.FileShare.Route)] HttpRequest request,
+		[HttpTrigger(
+			AuthorizationLevel.Function,
+			"get",
+			Route = AzureFunctions.Diagnostic.FileShare.Route)] HttpRequest request,
 		ILogger log)
 	{
 		try
@@ -82,11 +123,19 @@ public class CosDashboard
 			string path = GetRequestPathAndQuery(request, AzureFunctions.Diagnostic.FileShare.Name);
 			log.LogInformation($"Processed diagnostic request to fileshare path: {(string.IsNullOrWhiteSpace(path) ? "[root]" : path)}");
 
-			string resultPath = $"/mnt/resources/{path}";
-			return new OkObjectResult(Directory.GetDirectories(resultPath).Concat(Directory.GetFiles(resultPath)));
+			string resultPath = $"{Paths.Resources}/{path}";
+			return new OkObjectResult(new Dictionary<string, IEnumerable<string>>
+				{
+					{"directories", Directory.GetDirectories(resultPath).Select(i => Path.GetFileName(i))},
+					{"files", Directory.GetFiles(resultPath).Select(i => Path.GetFileName(i))}
+				});
 		}
 		catch (Exception exception)
 		{
+			if (exception is DirectoryNotFoundException || exception is FileNotFoundException)
+			{
+				return new BadRequestObjectResult("No such directory.");
+			}
 			return SecureExceptionResult(exception);
 		}
 	}

@@ -24,6 +24,12 @@ public static class HttpClientNames
 	public const string Avatars = "AvatarsClient";
 }
 
+public static class Paths
+{
+	public const string Resources = "/mnt/resources";
+	public const string Calendar = $"{Resources}/ical";
+}
+
 public static class AzureFunctions
 {
 	public static class Dashboard
@@ -36,6 +42,12 @@ public static class AzureFunctions
 	{
 		public const string Name = "Avatars";
 		public const string Route = $"{Name}/{{*remainder}}";
+	}
+
+	public static class Calendar
+	{
+		public const string Name = "Calendar";
+		public const string Route = $"{Name}/{{calendarName:maxlength(50)?}}";
 	}
 
 	public static class Authentication
