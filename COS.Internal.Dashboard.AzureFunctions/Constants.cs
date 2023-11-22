@@ -42,4 +42,13 @@ public static class AzureFunctions
 	{
 		public const string Name = "Authenticate";
 	}
+
+	public static class Diagnostic
+	{
+		public static class FileShare
+		{
+			public const string Name = "FileShare";
+			public const string Route = $"{Name}/{{*remainder}}";
+		}
+	}
 }

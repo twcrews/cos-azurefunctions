@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using System.Net.Http;
 using System.Globalization;
 using System.Collections;
+using System.IO;
 
 namespace COS.Internal.Dashboard.AzureFunctions;
 
@@ -18,7 +19,7 @@ public class CosDashboard
 
 	public CosDashboard(IHttpClientFactory factory)
 	{
-		_apiClient = factory.CreateClient(HttpClientNames.Api) ;
+		_apiClient = factory.CreateClient(HttpClientNames.Api);
 		_avatarsClient = factory.CreateClient(HttpClientNames.Avatars);
 	}
 
@@ -33,7 +34,7 @@ public class CosDashboard
 			log.LogInformation($"Processed request to path: {path}");
 
 			HttpResponseMessage response;
-			if (request.Method.ToLowerInvariant() == "get") 
+			if (request.Method.ToLowerInvariant() == "get")
 			{
 				response = await _apiClient.GetAsync(path);
 			}
@@ -44,7 +45,7 @@ public class CosDashboard
 			string body = await response.Content.ReadAsStringAsync();
 
 			return new OkObjectResult(body);
-		} 
+		}
 		catch (Exception exception)
 		{
 			return SecureExceptionResult(exception);
@@ -59,10 +60,28 @@ public class CosDashboard
 		try
 		{
 			string path = GetRequestPathAndQuery(request, AzureFunctions.Avatars.Name);
-			log.LogInformation($"Processed an Avatar request to the following path: {path}");
+			log.LogInformation($"Processed Avatar request to path: {path}");
 
 			HttpResponseMessage response = await _avatarsClient.GetAsync(path);
 			return new FileStreamResult(await response.Content.ReadAsStreamAsync(), $"image/{path[^3..]}");
+		}
+		catch (Exception exception)
+		{
+			return SecureExceptionResult(exception);
+		}
+	}
+
+	[FunctionName(AzureFunctions.Diagnostic.FileShare.Name)]
+	public static IActionResult FileShare(
+		[HttpTrigger(AuthorizationLevel.Function, "get", Route = AzureFunctions.Diagnostic.FileShare.Route)] HttpRequest request,
+		ILogger log)
+	{
+		try
+		{
+			string path = GetRequestPathAndQuery(request, AzureFunctions.Diagnostic.FileShare.Name);
+			log.LogInformation($"Processed diagnostic request to fileshare path: {(string.IsNullOrWhiteSpace(path) ? "[root]" : path)}");
+
+			return new OkObjectResult(Directory.GetDirectories($"/mnt/resources/{path}"));
 		}
 		catch (Exception exception)
 		{
