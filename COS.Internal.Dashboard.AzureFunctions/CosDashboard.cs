@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -90,8 +90,17 @@ public class CosDashboard
 	}
 
 	private static string GetRequestPathAndQuery(HttpRequest request, string functionName)
-		=> $"{request.Path.Value}{request.QueryString}"
-				.Replace($"/api/{functionName}/", "", StringComparison.InvariantCultureIgnoreCase);
+	{
+		string basePath = $"/api/{functionName}";
+		string fullRequestPath = $"{request.Path.Value}{request.QueryString}";
+
+		if (fullRequestPath == basePath)
+		{
+			fullRequestPath = $"{fullRequestPath}/";
+		}
+
+		return fullRequestPath.Replace($"/api/{functionName}/", "", StringComparison.InvariantCultureIgnoreCase);
+	}
 
 	private static ObjectResult SecureExceptionResult(Exception exception)
 	{
