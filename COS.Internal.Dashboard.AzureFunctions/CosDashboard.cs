@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -9,6 +9,7 @@ using System.Net.Http;
 using System.Globalization;
 using System.Collections;
 using System.IO;
+using System.Linq;
 
 namespace COS.Internal.Dashboard.AzureFunctions;
 
@@ -81,7 +82,8 @@ public class CosDashboard
 			string path = GetRequestPathAndQuery(request, AzureFunctions.Diagnostic.FileShare.Name);
 			log.LogInformation($"Processed diagnostic request to fileshare path: {(string.IsNullOrWhiteSpace(path) ? "[root]" : path)}");
 
-			return new OkObjectResult(Directory.GetDirectories($"/mnt/resources/{path}"));
+			string resultPath = $"/mnt/resources/{path}";
+			return new OkObjectResult(Directory.GetDirectories(resultPath).Concat(Directory.GetFiles(resultPath)));
 		}
 		catch (Exception exception)
 		{
