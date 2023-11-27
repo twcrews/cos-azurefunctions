@@ -13,7 +13,7 @@ public class Startup : FunctionsStartup
 	{
 		IDictionary variables = Environment.GetEnvironmentVariables();
 
-		builder.Services.AddHttpClient(HttpClientNames.Api, client =>
+		builder.Services.AddHttpClient(HttpClientName.Api, client =>
 		{
 			string appID = variables[EnvironmentVariables.PlanningCenter.Credentials.AppID] as string;
 			string secret = variables[EnvironmentVariables.PlanningCenter.Credentials.Secret] as string;
@@ -22,7 +22,12 @@ public class Startup : FunctionsStartup
 			client.BaseAddress = new(variables[EnvironmentVariables.PlanningCenter.BaseUrls.Api] as string);
 			client.DefaultRequestHeaders.Authorization = new("Basic", encodedCredentials);
 		});
-		builder.Services.AddHttpClient(HttpClientNames.Avatars, client =>
+		builder.Services.AddHttpClient(HttpClientName.Avatars, client =>
 			client.BaseAddress = new(variables[EnvironmentVariables.PlanningCenter.BaseUrls.Avatars] as string));
+		builder.Services.AddHttpClient(HttpClientName.GitHub, client =>
+		{
+			client.BaseAddress = new("https://api.github.com/");
+			client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (compatible; AcmeInc/1.0)");
+		});
 	}
 }

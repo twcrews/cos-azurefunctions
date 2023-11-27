@@ -11,6 +11,8 @@ using System.Collections;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
+using System.Text.Json;
 
 namespace COS.Internal.Dashboard.AzureFunctions;
 
@@ -18,11 +20,13 @@ public class CosDashboard
 {
 	private readonly HttpClient _apiClient;
 	private readonly HttpClient _avatarsClient;
+	private readonly HttpClient _gitHubClient;
 
 	public CosDashboard(IHttpClientFactory factory)
 	{
-		_apiClient = factory.CreateClient(HttpClientNames.Api);
-		_avatarsClient = factory.CreateClient(HttpClientNames.Avatars);
+		_apiClient = factory.CreateClient(HttpClientName.Api);
+		_avatarsClient = factory.CreateClient(HttpClientName.Avatars);
+		_gitHubClient = factory.CreateClient(HttpClientName.GitHub);
 	}
 
 	[FunctionName(AzureFunctions.Dashboard.Name)]
@@ -136,6 +140,29 @@ public class CosDashboard
 			{
 				return new BadRequestObjectResult("No such directory.");
 			}
+			return SecureExceptionResult(exception);
+		}
+	}
+
+	[FunctionName(AzureFunctions.Versioning.HeadHash.Name)]
+	public async Task<IActionResult> HeadHash(
+		[HttpTrigger(AuthorizationLevel.Function, "get", Route = null)] HttpRequest request,
+		ILogger log)
+	{
+		try
+		{
+			log.LogInformation($"Processed request for latest client head hash");
+			
+			HttpResponseMessage response = await _gitHubClient.GetAsync(Paths.HeadHash);
+			string responseBody = await response.Content.ReadAsStringAsync();
+
+			return new OkObjectResult(JsonDocument
+				.Parse(responseBody).RootElement
+				.GetProperty("sha")
+				.GetString());
+		}
+		catch (Exception exception)
+		{
 			return SecureExceptionResult(exception);
 		}
 	}

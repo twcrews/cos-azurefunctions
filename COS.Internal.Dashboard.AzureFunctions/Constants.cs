@@ -18,16 +18,18 @@ public static class EnvironmentVariables
 	}
 }
 
-public static class HttpClientNames
+public static class HttpClientName
 {
 	public const string Api = "ApiClient";
 	public const string Avatars = "AvatarsClient";
+	public const string GitHub = "GitHub";
 }
 
 public static class Paths
 {
 	public const string Resources = "/mnt/resources";
 	public const string Calendar = $"{Resources}/ical";
+	public const string HeadHash = "repos/twcrews/COS.Internal.Dashboard/commits/master";
 }
 
 public static class AzureFunctions
@@ -53,6 +55,14 @@ public static class AzureFunctions
 	public static class Authentication
 	{
 		public const string Name = "Authenticate";
+	}
+
+	public static class Versioning
+	{
+		public static class HeadHash
+		{
+			public const string Name = "HeadHash";
+		}
 	}
 
 	public static class Diagnostic
