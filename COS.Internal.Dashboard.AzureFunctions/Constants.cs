@@ -16,6 +16,13 @@ public static class EnvironmentVariables
 			public const string Secret = "PLANNING_CENTER_SECRET";
 		}
 	}
+
+	public static class GitHub
+	{
+		public const string BaseUrl = "GITHUB_API_URL";
+		public const string ApiToken = "GITHUB_TOKEN";
+		public const string UserAgent = "GITHUB_USER_AGENT";
+	}
 }
 
 public static class HttpClientName

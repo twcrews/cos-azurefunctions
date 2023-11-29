@@ -149,11 +149,29 @@ public class CosDashboard
 		[HttpTrigger(AuthorizationLevel.Function, "get", Route = null)] HttpRequest request,
 		ILogger log)
 	{
+		string rateLimitHeaderKey = "X-RateLimit-Limit";
+		string remainingHeaderKey = "X-RateLimit-Remaining";
 		try
 		{
 			log.LogInformation($"Processed request for latest client head hash");
 			
 			HttpResponseMessage response = await _gitHubClient.GetAsync(Paths.HeadHash);
+
+			string rateLimitHeader = "";
+			string remainingLimitHeader = "";
+
+			if (response.Headers.TryGetValues(rateLimitHeaderKey, out IEnumerable<string> values))
+			{
+				rateLimitHeader = values.FirstOrDefault() ?? "";
+			}
+			if (response.Headers.TryGetValues(remainingHeaderKey, out values))
+			{
+				remainingLimitHeader = values.FirstOrDefault() ?? "";
+			}
+
+			request.HttpContext.Response.Headers.Add(rateLimitHeaderKey, rateLimitHeader);
+			request.HttpContext.Response.Headers.Add(remainingHeaderKey, remainingLimitHeader);
+
 			string responseBody = await response.Content.ReadAsStringAsync();
 
 			return new OkObjectResult(JsonDocument

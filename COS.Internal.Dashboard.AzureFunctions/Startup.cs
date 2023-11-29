@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Net.Http.Headers;
 using System.Text;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,8 +27,11 @@ public class Startup : FunctionsStartup
 			client.BaseAddress = new(variables[EnvironmentVariables.PlanningCenter.BaseUrls.Avatars] as string));
 		builder.Services.AddHttpClient(HttpClientName.GitHub, client =>
 		{
-			client.BaseAddress = new("https://api.github.com/");
-			client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (compatible; AcmeInc/1.0)");
+			client.BaseAddress = new(variables[EnvironmentVariables.GitHub.BaseUrl] as string);
+			client.DefaultRequestHeaders.UserAgent.ParseAdd(
+				variables[EnvironmentVariables.GitHub.UserAgent] as string);
+			client.DefaultRequestHeaders.Authorization = new(
+				"Bearer", variables[EnvironmentVariables.GitHub.ApiToken] as string);
 		});
 	}
 }
