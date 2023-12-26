@@ -28,7 +28,7 @@ public static class EnvironmentVariables
 
 	public static class Paths
 	{
-		public const string Resources = "RESOURCES_PATH";
+		public const string Resources = "AZURE_STORAGE_RESOURCES_PATH";
 	}
 }
 
@@ -41,7 +41,8 @@ public static class HttpClientName
 
 public static class Paths
 {
-	public static readonly string Calendar = $"{Environment.GetEnvironmentVariable(EnvironmentVariables.Paths.Resources) ?? string.Empty}/ical";
+	public static readonly string Calendar = 
+	$"{Environment.GetEnvironmentVariable(EnvironmentVariables.Paths.Resources) ?? string.Empty}/ical";
 	public const string HeadHash = "repos/twcrews/COS.Internal.Dashboard/commits/master";
 }
 
