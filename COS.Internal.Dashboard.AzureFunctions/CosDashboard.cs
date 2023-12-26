@@ -126,7 +126,7 @@ public class CosDashboard
 			string path = GetRequestPathAndQuery(request, AzureFunctions.Diagnostic.FileShare.Name);
 			log.LogInformation($"Processed diagnostic request to fileshare path: {(string.IsNullOrWhiteSpace(path) ? "[root]" : path)}");
 
-			string resultPath = $"{Paths.Resources}/{path}";
+			string resultPath = $"{Environment.GetEnvironmentVariable(EnvironmentVariables.Paths.Resources) ?? ""}/{path}";
 			return new OkObjectResult(new Dictionary<string, IEnumerable<string>>
 				{
 					{"directories", Directory.GetDirectories(resultPath).Select(i => Path.GetFileName(i))},

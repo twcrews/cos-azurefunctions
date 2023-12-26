@@ -1,4 +1,6 @@
-﻿namespace COS.Internal.Dashboard.AzureFunctions;
+﻿using System;
+
+namespace COS.Internal.Dashboard.AzureFunctions;
 
 public static class EnvironmentVariables
 {
@@ -23,6 +25,11 @@ public static class EnvironmentVariables
 		public const string ApiToken = "GITHUB_TOKEN";
 		public const string UserAgent = "GITHUB_USER_AGENT";
 	}
+
+	public static class Paths
+	{
+		public const string Resources = "RESOURCES_PATH";
+	}
 }
 
 public static class HttpClientName
@@ -34,8 +41,7 @@ public static class HttpClientName
 
 public static class Paths
 {
-	public const string Resources = "/mnt/resources";
-	public const string Calendar = $"{Resources}/ical";
+	public static readonly string Calendar = $"{Environment.GetEnvironmentVariable(EnvironmentVariables.Paths.Resources) ?? string.Empty}/ical";
 	public const string HeadHash = "repos/twcrews/COS.Internal.Dashboard/commits/master";
 }
 
