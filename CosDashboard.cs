@@ -8,9 +8,8 @@ using Microsoft.Azure.Functions.Worker;
 
 namespace Cos.AzureFunctions;
 
-public class CosDashboard(ILogger<CosDashboard> logger, IHttpClientFactory factory)
+public class CosDashboard(IHttpClientFactory factory)
 {
-	private readonly ILogger _logger = logger;
 	private readonly HttpClient _apiClient = factory.CreateClient(HttpClientName.Api);
 	private readonly HttpClient _avatarsClient = factory.CreateClient(HttpClientName.Avatars);
 	private readonly HttpClient _gitHubClient = factory.CreateClient(HttpClientName.GitHub);
@@ -26,7 +25,6 @@ public class CosDashboard(ILogger<CosDashboard> logger, IHttpClientFactory facto
 		try
 		{
 			string path = GetRequestPathAndQuery(request, AzureFunctions.Dashboard.Name);
-			_logger.LogInformation($"Processed request to path: {path}");
 
 			HttpResponseMessage response;
 			if (string.Equals(request.Method, "get", StringComparison.InvariantCultureIgnoreCase))
@@ -57,7 +55,6 @@ public class CosDashboard(ILogger<CosDashboard> logger, IHttpClientFactory facto
 		try
 		{
 			string path = GetRequestPathAndQuery(request, AzureFunctions.Avatars.Name);
-			_logger.LogInformation($"Processed Avatar request to path: {path}");
 
 			HttpResponseMessage response = await _avatarsClient.GetAsync(path);
 			return new FileStreamResult(await response.Content.ReadAsStreamAsync(), $"image/{path[^3..]}");
@@ -69,7 +66,7 @@ public class CosDashboard(ILogger<CosDashboard> logger, IHttpClientFactory facto
 	}
 
 	[Function(AzureFunctions.Calendar.Name)]
-	public IActionResult Calendar(
+	public static IActionResult Calendar(
 		[HttpTrigger(
 			AuthorizationLevel.Function,
 			"get",
@@ -80,11 +77,9 @@ public class CosDashboard(ILogger<CosDashboard> logger, IHttpClientFactory facto
 		{
 			if (string.IsNullOrWhiteSpace(calendarName))
 			{
-				_logger.LogInformation("Processed request for list of calendars.");
 				return new OkObjectResult(Directory.GetFiles(Paths.Calendar)
 					.Select(f => Path.GetFileNameWithoutExtension(f)));
 			}
-			_logger.LogInformation($"Processed request for calendar \"{calendarName}\".");
 			return new OkObjectResult(File.ReadAllText($"{Paths.Calendar}/{calendarName}.ics"));
 		}
 		catch (FileNotFoundException)
@@ -98,7 +93,7 @@ public class CosDashboard(ILogger<CosDashboard> logger, IHttpClientFactory facto
 	}
 
 	[Function(AzureFunctions.Diagnostic.FileShare.Name)]
-	public IActionResult FileShare(
+	public static IActionResult FileShare(
 		[HttpTrigger(
 			AuthorizationLevel.Function,
 			"get",
@@ -107,7 +102,6 @@ public class CosDashboard(ILogger<CosDashboard> logger, IHttpClientFactory facto
 		try
 		{
 			string path = GetRequestPathAndQuery(request, AzureFunctions.Diagnostic.FileShare.Name);
-			_logger.LogInformation($"Processed diagnostic request to fileshare path: {(string.IsNullOrWhiteSpace(path) ? "[root]" : path)}");
 
 			string resultPath = $"{Environment.GetEnvironmentVariable(EnvironmentVariables.Paths.Resources) ?? ""}/{path}";
 			return new OkObjectResult(new Dictionary<string, IEnumerable<string>>
@@ -134,8 +128,6 @@ public class CosDashboard(ILogger<CosDashboard> logger, IHttpClientFactory facto
 		string remainingHeaderKey = "X-RateLimit-Remaining";
 		try
 		{
-			_logger.LogInformation($"Processed request for latest client head hash");
-			
 			HttpResponseMessage response = await _gitHubClient.GetAsync(Paths.HeadHash);
 
 			string rateLimitHeader = "";
