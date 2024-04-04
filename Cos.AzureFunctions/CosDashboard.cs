@@ -1,17 +1,10 @@
-﻿using System;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.Http;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using System.Net.Http;
 using System.Globalization;
 using System.Collections;
-using System.IO;
-using System.Linq;
-using System.Collections.Generic;
 using System.Text.Json;
+using Microsoft.Azure.Functions.Worker;
 
 namespace Cos.AzureFunctions;
 
@@ -28,7 +21,7 @@ public class CosDashboard
 		_gitHubClient = factory.CreateClient(HttpClientName.GitHub);
 	}
 
-	[FunctionName(AzureFunctions.Dashboard.Name)]
+	[Function(AzureFunctions.Dashboard.Name)]
 	public async Task<IActionResult> DashboardProxy(
 		[HttpTrigger(
 			AuthorizationLevel.Function,
@@ -61,7 +54,7 @@ public class CosDashboard
 		}
 	}
 
-	[FunctionName(AzureFunctions.Avatars.Name)]
+	[Function(AzureFunctions.Avatars.Name)]
 	public async Task<IActionResult> AvatarProxy(
 		[HttpTrigger(
 			AuthorizationLevel.Function,
@@ -83,7 +76,7 @@ public class CosDashboard
 		}
 	}
 
-	[FunctionName(AzureFunctions.Calendar.Name)]
+	[Function(AzureFunctions.Calendar.Name)]
 	public static IActionResult Calendar(
 		[HttpTrigger(
 			AuthorizationLevel.Function,
@@ -113,7 +106,7 @@ public class CosDashboard
 		}
 	}
 
-	[FunctionName(AzureFunctions.Diagnostic.FileShare.Name)]
+	[Function(AzureFunctions.Diagnostic.FileShare.Name)]
 	public static IActionResult FileShare(
 		[HttpTrigger(
 			AuthorizationLevel.Function,
@@ -143,7 +136,7 @@ public class CosDashboard
 		}
 	}
 
-	[FunctionName(AzureFunctions.Versioning.HeadHash.Name)]
+	[Function(AzureFunctions.Versioning.HeadHash.Name)]
 	public async Task<IActionResult> HeadHash(
 		[HttpTrigger(AuthorizationLevel.Function, "get", Route = null)] HttpRequest request,
 		ILogger log)
