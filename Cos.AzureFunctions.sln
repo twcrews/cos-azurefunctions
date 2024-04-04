@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 25.0.1706.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "COS.Internal.Dashboard.AzureFunctions", "COS.Internal.Dashboard.AzureFunctions\COS.Internal.Dashboard.AzureFunctions.csproj", "{49F7CB94-0434-4880-92FB-6E8AB3BD94BE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cos.AzureFunctions", "Cos.AzureFunctions\Cos.AzureFunctions.csproj", "{49F7CB94-0434-4880-92FB-6E8AB3BD94BE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

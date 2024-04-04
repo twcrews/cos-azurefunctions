@@ -1,1 +1,1 @@
-# COS.Internal.Dashboard.AzureFunctions
+# Cos.AzureFunctions

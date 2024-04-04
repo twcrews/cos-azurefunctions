@@ -1,5 +1,5 @@
 {
-	"azureFunctions.deploySubpath": "COS.Internal.Dashboard.AzureFunctions/bin/Release/net6.0/publish",
+	"azureFunctions.deploySubpath": "Cos.AzureFunctions/bin/Release/net6.0/publish",
 	"azureFunctions.projectLanguage": "C#",
 	"azureFunctions.projectRuntime": "~4",
 	"debug.internalConsoleOptions": "neverOpen",

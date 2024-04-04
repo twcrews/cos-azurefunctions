@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace COS.Internal.Dashboard.AzureFunctions;
+namespace Cos.AzureFunctions;
 
 public static class EnvironmentVariables
 {

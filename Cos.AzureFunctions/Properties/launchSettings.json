@@ -1,6 +1,6 @@
 ﻿{
   "profiles": {
-    "COS.Internal.Dashboard.AzureFunctions": {
+    "Cos.AzureFunctions": {
       "commandName": "Project",
       "commandLineArgs": "--port 7092",
       "launchBrowser": false

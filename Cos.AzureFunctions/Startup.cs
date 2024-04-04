@@ -5,8 +5,8 @@ using System.Text;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 
-[assembly: FunctionsStartup(typeof(COS.Internal.Dashboard.AzureFunctions.Startup))]
-namespace COS.Internal.Dashboard.AzureFunctions;
+[assembly: FunctionsStartup(typeof(Cos.AzureFunctions.Startup))]
+namespace Cos.AzureFunctions;
 
 public class Startup : FunctionsStartup
 {

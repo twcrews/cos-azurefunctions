@@ -13,7 +13,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text.Json;
 
-namespace COS.Internal.Dashboard.AzureFunctions;
+namespace Cos.AzureFunctions;
 
 public class CosDashboard
 {
