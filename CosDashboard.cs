@@ -8,35 +8,28 @@ using Microsoft.Azure.Functions.Worker;
 
 namespace Cos.AzureFunctions;
 
-public class CosDashboard
+public class CosDashboard(ILogger<CosDashboard> logger, IHttpClientFactory factory)
 {
-	private readonly HttpClient _apiClient;
-	private readonly HttpClient _avatarsClient;
-	private readonly HttpClient _gitHubClient;
+	private readonly ILogger _logger = logger;
+	private readonly HttpClient _apiClient = factory.CreateClient(HttpClientName.Api);
+	private readonly HttpClient _avatarsClient = factory.CreateClient(HttpClientName.Avatars);
+	private readonly HttpClient _gitHubClient = factory.CreateClient(HttpClientName.GitHub);
 
-	public CosDashboard(IHttpClientFactory factory)
-	{
-		_apiClient = factory.CreateClient(HttpClientName.Api);
-		_avatarsClient = factory.CreateClient(HttpClientName.Avatars);
-		_gitHubClient = factory.CreateClient(HttpClientName.GitHub);
-	}
-
-	[Function(AzureFunctions.Dashboard.Name)]
+    [Function(AzureFunctions.Dashboard.Name)]
 	public async Task<IActionResult> DashboardProxy(
 		[HttpTrigger(
 			AuthorizationLevel.Function,
 			"get",
 			"post",
-			Route = AzureFunctions.Dashboard.Route)] HttpRequest request,
-		ILogger log)
+			Route = AzureFunctions.Dashboard.Route)] HttpRequest request)
 	{
 		try
 		{
 			string path = GetRequestPathAndQuery(request, AzureFunctions.Dashboard.Name);
-			log.LogInformation($"Processed request to path: {path}");
+			_logger.LogInformation($"Processed request to path: {path}");
 
 			HttpResponseMessage response;
-			if (request.Method.ToLowerInvariant() == "get")
+			if (string.Equals(request.Method, "get", StringComparison.InvariantCultureIgnoreCase))
 			{
 				response = await _apiClient.GetAsync(path);
 			}
@@ -59,13 +52,12 @@ public class CosDashboard
 		[HttpTrigger(
 			AuthorizationLevel.Function,
 			"get",
-			Route = AzureFunctions.Avatars.Route)] HttpRequest request,
-		ILogger log)
+			Route = AzureFunctions.Avatars.Route)] HttpRequest request)
 	{
 		try
 		{
 			string path = GetRequestPathAndQuery(request, AzureFunctions.Avatars.Name);
-			log.LogInformation($"Processed Avatar request to path: {path}");
+			_logger.LogInformation($"Processed Avatar request to path: {path}");
 
 			HttpResponseMessage response = await _avatarsClient.GetAsync(path);
 			return new FileStreamResult(await response.Content.ReadAsStreamAsync(), $"image/{path[^3..]}");
@@ -77,23 +69,22 @@ public class CosDashboard
 	}
 
 	[Function(AzureFunctions.Calendar.Name)]
-	public static IActionResult Calendar(
+	public IActionResult Calendar(
 		[HttpTrigger(
 			AuthorizationLevel.Function,
 			"get",
 			Route = AzureFunctions.Calendar.Route)] HttpRequest request,
-			string calendarName,
-		ILogger log)
+			string calendarName)
 	{
 		try
 		{
 			if (string.IsNullOrWhiteSpace(calendarName))
 			{
-				log.LogInformation("Processed request for list of calendars.");
+				_logger.LogInformation("Processed request for list of calendars.");
 				return new OkObjectResult(Directory.GetFiles(Paths.Calendar)
 					.Select(f => Path.GetFileNameWithoutExtension(f)));
 			}
-			log.LogInformation($"Processed request for calendar \"{calendarName}\".");
+			_logger.LogInformation($"Processed request for calendar \"{calendarName}\".");
 			return new OkObjectResult(File.ReadAllText($"{Paths.Calendar}/{calendarName}.ics"));
 		}
 		catch (FileNotFoundException)
@@ -107,17 +98,16 @@ public class CosDashboard
 	}
 
 	[Function(AzureFunctions.Diagnostic.FileShare.Name)]
-	public static IActionResult FileShare(
+	public IActionResult FileShare(
 		[HttpTrigger(
 			AuthorizationLevel.Function,
 			"get",
-			Route = AzureFunctions.Diagnostic.FileShare.Route)] HttpRequest request,
-		ILogger log)
+			Route = AzureFunctions.Diagnostic.FileShare.Route)] HttpRequest request)
 	{
 		try
 		{
 			string path = GetRequestPathAndQuery(request, AzureFunctions.Diagnostic.FileShare.Name);
-			log.LogInformation($"Processed diagnostic request to fileshare path: {(string.IsNullOrWhiteSpace(path) ? "[root]" : path)}");
+			_logger.LogInformation($"Processed diagnostic request to fileshare path: {(string.IsNullOrWhiteSpace(path) ? "[root]" : path)}");
 
 			string resultPath = $"{Environment.GetEnvironmentVariable(EnvironmentVariables.Paths.Resources) ?? ""}/{path}";
 			return new OkObjectResult(new Dictionary<string, IEnumerable<string>>
@@ -138,14 +128,13 @@ public class CosDashboard
 
 	[Function(AzureFunctions.Versioning.HeadHash.Name)]
 	public async Task<IActionResult> HeadHash(
-		[HttpTrigger(AuthorizationLevel.Function, "get", Route = null)] HttpRequest request,
-		ILogger log)
+		[HttpTrigger(AuthorizationLevel.Function, "get", Route = null)] HttpRequest request)
 	{
 		string rateLimitHeaderKey = "X-RateLimit-Limit";
 		string remainingHeaderKey = "X-RateLimit-Remaining";
 		try
 		{
-			log.LogInformation($"Processed request for latest client head hash");
+			_logger.LogInformation($"Processed request for latest client head hash");
 			
 			HttpResponseMessage response = await _gitHubClient.GetAsync(Paths.HeadHash);
 
@@ -207,4 +196,3 @@ public class CosDashboard
 		return response;
 	}
 }
-
