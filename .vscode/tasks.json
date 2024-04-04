@@ -12,7 +12,7 @@
 			"type": "process",
 			"problemMatcher": "$msCompile",
 			"options": {
-				"cwd": "${workspaceFolder}/Cos.AzureFunctions"
+				"cwd": "${workspaceFolder}"
 			}
 		},
 		{
@@ -31,7 +31,7 @@
 			},
 			"problemMatcher": "$msCompile",
 			"options": {
-				"cwd": "${workspaceFolder}/Cos.AzureFunctions"
+				"cwd": "${workspaceFolder}"
 			}
 		},
 		{
@@ -47,7 +47,7 @@
 			"type": "process",
 			"problemMatcher": "$msCompile",
 			"options": {
-				"cwd": "${workspaceFolder}/Cos.AzureFunctions"
+				"cwd": "${workspaceFolder}"
 			}
 		},
 		{
@@ -64,14 +64,14 @@
 			"dependsOn": "clean release (functions)",
 			"problemMatcher": "$msCompile",
 			"options": {
-				"cwd": "${workspaceFolder}/Cos.AzureFunctions"
+				"cwd": "${workspaceFolder}"
 			}
 		},
 		{
 			"type": "func",
 			"dependsOn": "build (functions)",
 			"options": {
-				"cwd": "${workspaceFolder}/Cos.AzureFunctions/bin/Debug/net8.0"
+				"cwd": "${workspaceFolder}/bin/Debug/net8.0"
 			},
 			"command": "host start",
 			"isBackground": true,
