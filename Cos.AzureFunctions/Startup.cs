@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Net.Http.Headers;
 using System.Text;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
