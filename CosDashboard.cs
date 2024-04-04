@@ -152,7 +152,7 @@ public class CosDashboard
 			string rateLimitHeader = "";
 			string remainingLimitHeader = "";
 
-			if (response.Headers.TryGetValues(rateLimitHeaderKey, out IEnumerable<string> values))
+			if (response.Headers.TryGetValues(rateLimitHeaderKey, out IEnumerable<string>? values))
 			{
 				rateLimitHeader = values.FirstOrDefault() ?? "";
 			}
@@ -161,8 +161,8 @@ public class CosDashboard
 				remainingLimitHeader = values.FirstOrDefault() ?? "";
 			}
 
-			request.HttpContext.Response.Headers.Add(rateLimitHeaderKey, rateLimitHeader);
-			request.HttpContext.Response.Headers.Add(remainingHeaderKey, remainingLimitHeader);
+			request.HttpContext.Response.Headers.Append(rateLimitHeaderKey, rateLimitHeader);
+			request.HttpContext.Response.Headers.Append(remainingHeaderKey, remainingLimitHeader);
 
 			string responseBody = await response.Content.ReadAsStringAsync();
 
@@ -193,8 +193,8 @@ public class CosDashboard
 	private static ObjectResult SecureExceptionResult(Exception exception)
 	{
 		IDictionary variables = Environment.GetEnvironmentVariables();
-		string appID = variables[EnvironmentVariables.PlanningCenter.Credentials.AppID] as string;
-		string secret = variables[EnvironmentVariables.PlanningCenter.Credentials.Secret] as string;
+		string appID = variables[EnvironmentVariables.PlanningCenter.Credentials.AppID] as string ?? "appId";
+		string secret = variables[EnvironmentVariables.PlanningCenter.Credentials.Secret] as string ?? "secret";
 
 		string message = exception.Message
 			.Replace(appID, "*****", true, CultureInfo.InvariantCulture)
