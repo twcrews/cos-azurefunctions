@@ -34,13 +34,6 @@ jobs:
           pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
           dotnet build --configuration Release --output ./output
           popd
-      
-      - name: Login to Azure
-        uses: azure/login@v1
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_D2B7015A2C1240848F449417D43DA412 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_EC0BA584A72F4764ABAA1EA0F062BCF0 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_D58E56F860BA44B9A63A9F2A8953485F }}
 
       - name: 'Run Azure Functions Action'
         uses: Azure/functions-action@v1
@@ -49,4 +42,4 @@ jobs:
           app-name: 'cos-functions'
           slot-name: 'stage'
           package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
-          
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_2269DF73F4354AE2A7A421526EF4512E }}
