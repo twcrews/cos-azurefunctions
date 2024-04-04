@@ -8,7 +8,9 @@
 		"vscode": {
 			"extensions": [
 				"ms-azuretools.vscode-azurefunctions",
-				"ms-dotnettools.csdevkit"
+				"ms-dotnettools.csdevkit",
+				"k--kato.docomment",
+				"eamodio.gitlens"
 			]
 		}
 	}
