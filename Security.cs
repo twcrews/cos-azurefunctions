@@ -4,7 +4,7 @@ using Microsoft.Azure.Functions.Worker;
 
 namespace Cos.AzureFunctions;
 
-public static class Services
+public static class Security
 {
 	[Function(AzureFunctions.Authentication.Name)]
 	public static IActionResult Run(

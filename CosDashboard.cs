@@ -1,190 +1,61 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using System.Globalization;
-using System.Collections;
-using System.Text.Json;
 using Microsoft.Azure.Functions.Worker;
+using Cos.AzureFunctions.Services;
+using Cos.AzureFunctions.Extensions;
 
 namespace Cos.AzureFunctions;
 
-public class CosDashboard(IHttpClientFactory factory)
+public class CosDashboard(
+	IHttpProxyService httpProxyService,
+	IAvatarService avatarService,
+	IVersionControlService versionControlService)
 {
-	private readonly HttpClient _apiClient = factory.CreateClient(HttpClientName.Api);
-	private readonly HttpClient _avatarsClient = factory.CreateClient(HttpClientName.Avatars);
-	private readonly HttpClient _gitHubClient = factory.CreateClient(HttpClientName.GitHub);
+	private readonly IHttpProxyService _httpProxy = httpProxyService;
+	private readonly IAvatarService _avatars = avatarService;
+	private readonly IVersionControlService _versionControl = versionControlService;
 
-    [Function(AzureFunctions.Dashboard.Name)]
-	public async Task<IActionResult> DashboardProxy(
+	[Function(AzureFunctions.Dashboard.Name)]
+	public Task<IActionResult> DashboardProxy(
 		[HttpTrigger(
 			AuthorizationLevel.Function,
 			"get",
 			"post",
 			Route = AzureFunctions.Dashboard.Route)] HttpRequest request)
-	{
-		try
-		{
-			string path = GetRequestPathAndQuery(request, AzureFunctions.Dashboard.Name);
-
-			HttpResponseMessage response;
-			if (string.Equals(request.Method, "get", StringComparison.InvariantCultureIgnoreCase))
-			{
-				response = await _apiClient.GetAsync(path);
-			}
-			else
-			{
-				response = await _apiClient.PostAsync(path, new StreamContent(request.Body));
-			}
-			string body = await response.Content.ReadAsStringAsync();
-
-			return new OkObjectResult(body);
-		}
-		catch (Exception exception)
-		{
-			return SecureExceptionResult(exception);
-		}
-	}
+		=> TryAsync(() => _httpProxy.SendRequestAsync(request));
 
 	[Function(AzureFunctions.Avatars.Name)]
-	public async Task<IActionResult> AvatarProxy(
+	public Task<IActionResult> AvatarProxy(
 		[HttpTrigger(
 			AuthorizationLevel.Function,
 			"get",
 			Route = AzureFunctions.Avatars.Route)] HttpRequest request)
-	{
-		try
+		=> TryAsync(async () =>
 		{
-			string path = GetRequestPathAndQuery(request, AzureFunctions.Avatars.Name);
-
-			HttpResponseMessage response = await _avatarsClient.GetAsync(path);
-			return new FileStreamResult(await response.Content.ReadAsStreamAsync(), $"image/{path[^3..]}");
-		}
-		catch (Exception exception)
-		{
-			return SecureExceptionResult(exception);
-		}
-	}
-
-	[Function(AzureFunctions.Calendar.Name)]
-	public static IActionResult Calendar(
-		[HttpTrigger(
-			AuthorizationLevel.Function,
-			"get",
-			Route = AzureFunctions.Calendar.Route)] HttpRequest request,
-			string calendarName)
-	{
-		try
-		{
-			if (string.IsNullOrWhiteSpace(calendarName))
-			{
-				return new OkObjectResult(Directory.GetFiles(Paths.Calendar)
-					.Select(f => Path.GetFileNameWithoutExtension(f)));
-			}
-			return new OkObjectResult(File.ReadAllText($"{Paths.Calendar}/{calendarName}.ics"));
-		}
-		catch (FileNotFoundException)
-		{
-			return new BadRequestObjectResult("No such calendar.");
-		}
-		catch (Exception exception)
-		{
-			return SecureExceptionResult(exception);
-		}
-	}
-
-	[Function(AzureFunctions.Diagnostic.FileShare.Name)]
-	public static IActionResult FileShare(
-		[HttpTrigger(
-			AuthorizationLevel.Function,
-			"get",
-			Route = AzureFunctions.Diagnostic.FileShare.Route)] HttpRequest request)
-	{
-		try
-		{
-			string path = GetRequestPathAndQuery(request, AzureFunctions.Diagnostic.FileShare.Name);
-
-			string resultPath = $"{Environment.GetEnvironmentVariable(EnvironmentVariables.Paths.Resources) ?? ""}/{path}";
-			return new OkObjectResult(new Dictionary<string, IEnumerable<string>>
-				{
-					{"directories", Directory.GetDirectories(resultPath).Select(i => Path.GetFileName(i))},
-					{"files", Directory.GetFiles(resultPath).Select(i => Path.GetFileName(i))}
-				});
-		}
-		catch (Exception exception)
-		{
-			if (exception is DirectoryNotFoundException || exception is FileNotFoundException)
-			{
-				return new BadRequestObjectResult("No such directory.");
-			}
-			return SecureExceptionResult(exception);
-		}
-	}
+			string path = request.PathAndQuery(AzureFunctions.Avatars.Name);
+			Stream avatarData = await _avatars.GetAvatarAsync(path);
+			return new FileStreamResult(avatarData, $"image/{path.Split('.').Last()}");
+		});
 
 	[Function(AzureFunctions.Versioning.HeadHash.Name)]
-	public async Task<IActionResult> HeadHash(
+	public Task<IActionResult> HeadHash(
 		[HttpTrigger(AuthorizationLevel.Function, "get", Route = null)] HttpRequest request)
+		=> TryAsync(async () =>
+		{
+			var _ = request;
+			string hash = await _versionControl.GetHeadHash();
+			return new OkObjectResult(hash);
+		});
+
+	private static async Task<IActionResult> TryAsync(Func<Task<IActionResult>> action)
 	{
-		string rateLimitHeaderKey = "X-RateLimit-Limit";
-		string remainingHeaderKey = "X-RateLimit-Remaining";
 		try
 		{
-			HttpResponseMessage response = await _gitHubClient.GetAsync(Paths.HeadHash);
-
-			string rateLimitHeader = "";
-			string remainingLimitHeader = "";
-
-			if (response.Headers.TryGetValues(rateLimitHeaderKey, out IEnumerable<string>? values))
-			{
-				rateLimitHeader = values.FirstOrDefault() ?? "";
-			}
-			if (response.Headers.TryGetValues(remainingHeaderKey, out values))
-			{
-				remainingLimitHeader = values.FirstOrDefault() ?? "";
-			}
-
-			request.HttpContext.Response.Headers.Append(rateLimitHeaderKey, rateLimitHeader);
-			request.HttpContext.Response.Headers.Append(remainingHeaderKey, remainingLimitHeader);
-
-			string responseBody = await response.Content.ReadAsStringAsync();
-
-			return new OkObjectResult(JsonDocument
-				.Parse(responseBody).RootElement
-				.GetProperty("sha")
-				.GetString());
+			return await action();
 		}
 		catch (Exception exception)
 		{
-			return SecureExceptionResult(exception);
+			return exception.AsSecureErrorResponse();
 		}
-	}
-
-	private static string GetRequestPathAndQuery(HttpRequest request, string functionName)
-	{
-		string basePath = $"/api/{functionName}";
-		string fullRequestPath = $"{request.Path.Value}{request.QueryString}";
-
-		if (fullRequestPath == basePath)
-		{
-			fullRequestPath = $"{fullRequestPath}/";
-		}
-
-		return fullRequestPath.Replace($"/api/{functionName}/", "", StringComparison.InvariantCultureIgnoreCase);
-	}
-
-	private static ObjectResult SecureExceptionResult(Exception exception)
-	{
-		IDictionary variables = Environment.GetEnvironmentVariables();
-		string appID = variables[EnvironmentVariables.PlanningCenter.Credentials.AppID] as string ?? "appId";
-		string secret = variables[EnvironmentVariables.PlanningCenter.Credentials.Secret] as string ?? "secret";
-
-		string message = exception.Message
-			.Replace(appID, "*****", true, CultureInfo.InvariantCulture)
-			.Replace(secret, "*****", true, CultureInfo.InvariantCulture);
-
-		ObjectResult response = new(message)
-		{
-			StatusCode = StatusCodes.Status500InternalServerError
-		};
-		return response;
 	}
 }
