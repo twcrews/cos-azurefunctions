@@ -41,7 +41,7 @@ public static class Paths
 {
 	public static readonly string Calendar = 
 	$"{Environment.GetEnvironmentVariable(EnvironmentVariables.Paths.Resources) ?? string.Empty}/ical";
-	public const string HeadHash = "repos/twcrews/COS.Internal.Dashboard/commits/master";
+	public const string HeadHash = "repos/twcrews/cos-internal-dashboard/commits/master";
 }
 
 public static class AzureFunctions
