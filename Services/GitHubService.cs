@@ -22,7 +22,17 @@ public class GitHubService : IVersionControlService
 
 	public async Task<string> GetHeadHash()
 	{
-		HttpResponseMessage response = await _httpClient.GetAsync(Paths.HeadHash);
+		IDictionary variables = Environment.GetEnvironmentVariables();
+
+		HttpRequestMessage request = new()
+		{
+			Method = HttpMethod.Get,
+			RequestUri = new($"{variables[EnvironmentVariables.GitHub.BaseUrl]}{Paths.HeadHash}")
+		};
+		request.Headers.Authorization = new("Bearer", variables[EnvironmentVariables.GitHub.ApiToken] as string);
+		request.Headers.UserAgent.ParseAdd(variables[EnvironmentVariables.GitHub.UserAgent] as string);
+
+		HttpResponseMessage response = await _httpClient.SendAsync(request);
 		string responseBody = await response.Content.ReadAsStringAsync();
 
 		return JsonDocument
