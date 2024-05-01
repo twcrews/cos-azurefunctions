@@ -22,6 +22,7 @@ public static class EnvironmentVariables
 		public const string BaseUrl = "GITHUB_API_URL";
 		public const string ApiToken = "GITHUB_TOKEN";
 		public const string UserAgent = "GITHUB_USER_AGENT";
+		public const string HeadHashUrl = "GITHUB_HEAD_HASH_URL";
 	}
 
 	public static class Paths
@@ -40,8 +41,9 @@ public static class HttpClientName
 public static class Paths
 {
 	public static readonly string Calendar = 
-	$"{Environment.GetEnvironmentVariable(EnvironmentVariables.Paths.Resources) ?? string.Empty}/ical";
-	public const string HeadHash = "repos/twcrews/cos-internal-dashboard/commits/master";
+		$"{Environment.GetEnvironmentVariable(EnvironmentVariables.Paths.Resources) ?? string.Empty}/ical";
+	public static readonly string HeadHash = 
+		$"{Environment.GetEnvironmentVariable(EnvironmentVariables.GitHub.HeadHashUrl)}";
 }
 
 public static class AzureFunctions
