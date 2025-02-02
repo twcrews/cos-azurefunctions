@@ -3,7 +3,7 @@ using System.Globalization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Cos.AzureFunctions;
+namespace Cos.AzureFunctions.Extensions;
 
 public static class ExceptionExtensions
 {

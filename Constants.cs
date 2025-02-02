@@ -24,11 +24,6 @@ public static class EnvironmentVariables
 		public const string UserAgent = "GITHUB_USER_AGENT";
 		public const string HeadHashUrl = "GITHUB_HEAD_HASH_URL";
 	}
-
-	public static class Paths
-	{
-		public const string Resources = "AZURE_STORAGE_RESOURCES_PATH";
-	}
 }
 
 public static class HttpClientName
@@ -40,8 +35,6 @@ public static class HttpClientName
 
 public static class Paths
 {
-	public static readonly string Calendar = 
-		$"{Environment.GetEnvironmentVariable(EnvironmentVariables.Paths.Resources) ?? string.Empty}/ical";
 	public static readonly string HeadHash = 
 		$"{Environment.GetEnvironmentVariable(EnvironmentVariables.GitHub.HeadHashUrl)}";
 }
@@ -76,15 +69,6 @@ public static class AzureFunctions
 		public static class HeadHash
 		{
 			public const string Name = "HeadHash";
-		}
-	}
-
-	public static class Diagnostic
-	{
-		public static class FileShare
-		{
-			public const string Name = "FileShare";
-			public const string Route = $"{Name}/{{*remainder}}";
 		}
 	}
 }
